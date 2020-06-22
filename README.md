@@ -1,2 +1,2 @@
-# ball_tracker_capstone
-A program that gets you your shooting stats 
+# ball_tracking
+CV project to track motion of a ball
