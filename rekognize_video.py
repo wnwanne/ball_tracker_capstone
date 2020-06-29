@@ -1,6 +1,7 @@
 from _collections import deque
 import boto3
 import numpy as np
+import math
 import cv2
 from datetime import datetime
 from PIL import Image, ImageDraw, ExifTags, ImageColor, ImageFont
@@ -120,6 +121,9 @@ def analyzeVideo(video, model, min_confidence):
             thickness = 2
             cv2.line(frame, pts[i - 1], pts[i], (44, 255, 20), thickness)
 
+        #draw launch angle
+        # angle = int(math.atan((y1 - y2) / (x2 - x1)) * 180 / math.pi)
+
         out.write(frame)
         cv2.imshow('frame', frame)
 
@@ -133,7 +137,7 @@ def main():
     video = "Demo Media/winnie_shooting2.mov"
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
-    min_confidence = 98
+    min_confidence = 99
 
     analyzeVideo(video, model, min_confidence)
 
