@@ -48,6 +48,8 @@ def show_custom_labels(model, photo, min_confidence):
             top = imgHeight * box['Top']
             width = imgWidth * box['Width']
             height = imgHeight * box['Height']
+            x = left + (width / 2)
+            y = top - (height / 2)
 
             fnt = ImageFont.truetype('/Library/Fonts/Arial.ttf', 50)
             draw.text((left, top), customLabel['Name'], fill='#00d400', font=fnt)
@@ -56,6 +58,7 @@ def show_custom_labels(model, photo, min_confidence):
             print('Top: ' + '{0:.0f}'.format(top))
             print('Label Width: ' + "{0:.0f}".format(width))
             print('Label Height: ' + "{0:.0f}".format(height))
+            print('X: {}, Y: {}'.format(x, y))
 
             points = (
                 (left, top),
@@ -72,7 +75,7 @@ def show_custom_labels(model, photo, min_confidence):
 
 def main():
     bucket = "custom-labels-console-us-east-1-a4ae15429b"
-    photo = "extracted_frames/frameA0.jpg"
+    photo = "Demo Media/Frames/frameA30.jpg"
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
     min_confidence = 99

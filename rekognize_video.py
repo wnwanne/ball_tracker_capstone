@@ -23,7 +23,7 @@ def analyzeVideo(video, model, min_confidence):
 
     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
     # Define the fps to be equal to 10. Also frame size is passed.
-    out = cv2.VideoWriter('outputs-{}.mp4'.format(current_time), cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (frame_width, frame_height))
+    out = cv2.VideoWriter('Demo Media/Outputs/outputs-{}.mp4'.format(current_time), cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (frame_width, frame_height))
 
     while (vid.isOpened()):
         frameId = vid.get(1)  # current frame number
@@ -102,10 +102,10 @@ def analyzeVideo(video, model, min_confidence):
     out.release()
 
 def main():
-    video = "videos/winnie_shooting_trimmed3.mp4"
+    video = "Demo Media/winnie_shooting.mov"
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
-    min_confidence = 90
+    min_confidence = 99
 
     analyzeVideo(video, model, min_confidence)
 
