@@ -24,7 +24,7 @@ def analyzeVideo(video, model, min_confidence):
     # Define the codec and create VideoWriter object.The output is stored in 'outputs-"date and time".mp4' file.
     # Define the fps to be equal to 10. Also frame size is passed.
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter("out-{}.avi".format(now), fourcc, 10, resolution)
+    out = cv2.VideoWriter("out.avi", fourcc, fps, resolution)
 
     while (vid.isOpened()):
         frameId = vid.get(1)  # current frame number
