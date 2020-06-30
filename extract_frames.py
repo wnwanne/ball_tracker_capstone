@@ -2,7 +2,7 @@ import cv2
 
 
 # get video from folder and read it in
-vid_path = 'Demo Media/winnie_shooting.mov'
+vid_path = 'Demo Media/winnie_shooting2.mov'
 
 vidcap = cv2.VideoCapture(vid_path)
 success,image = vidcap.read()
