@@ -2,6 +2,7 @@ from _collections import deque
 import boto3
 import math
 import cv2
+from datetime import datetime
 
 
 def analyzeVideo(video, model, min_confidence):
@@ -17,11 +18,13 @@ def analyzeVideo(video, model, min_confidence):
     fontscale = 1
     fontcolor = (0, 0, 0)
     thickness = 3
+    now = datetime.now()
+    filename = 'Demo Media//Outputs//ouputvid-{}.avi'.format(now)
 
     # Define the codec and create VideoWriter object.The output is stored in 'outputs-"date and time".mp4' file.
     # Define the fps to be equal to 10. Also frame size is passed.
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter("out.avi", fourcc, fps, resolution)
+    out = cv2.VideoWriter(filename, fourcc, fps, resolution)
 
     while vid.isOpened():
         frameId = vid.get(1)  # current frame number
@@ -80,20 +83,24 @@ def analyzeVideo(video, model, min_confidence):
 
         # loop over the set of tracked points if ball if above basket threshold
         # (hardcoded this--NEED TO REVISIT LATER)
-        # "y" represents the position of the ball
+        # pts[i][1] is "y" and it represents the position of the ball
+        # pts[i][0] is "x" and it represents the position of the ball
         # if y > 250 it means it is below the basket and we want to stop tracing it
+        # if x < 1200 it means its too far away from the basket
             for i in range(1, len(pts)):
-                # if either of the tracked points are None, ignore them
-                if pts[i - 1] is None or pts[i] is None:
-                    continue
-                # otherwise draw the connecting lines
-                cv2.line(frame, pts[i - 1], pts[i], (44, 255, 20), thickness)
-                # compute and draw launch angle
-                (x1, y1) = pts[-1]
-                (x2, y2) = pts[-2]
-                angle = int(math.atan((y1 - y2) / (x1 - x2)) * 180 / math.pi)
-                cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
-                            fontface, fontscale, color=fontcolor, thickness=thickness)
+                if pts[i][1] < 250 or pts[i][0] > 1200:
+    #     for i in range(1, len(pts)):
+            # if either of the tracked points are None, ignore them
+                    if pts[i - 1] is None or pts[i] is None:
+                        continue
+                    # otherwise draw the connecting lines
+                    cv2.line(frame, pts[i - 1], pts[i], (44, 255, 20), thickness)
+                    # compute and draw launch angle
+                    (x1, y1) = pts[-1]
+                    (x2, y2) = pts[-2]
+                    angle = int(math.atan((y1 - y2) / (x1 - x2)) * 180 / math.pi)
+                    cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
+                                fontface, fontscale, color=fontcolor, thickness=thickness)
 
         # write the video to a file and show the video
         out.write(frame)
@@ -111,9 +118,13 @@ def main():
     video = "Demo Media/winnie_shooting2.mp4"
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
-    min_confidence = 99
 
-    analyzeVideo(video, model, min_confidence)
+    new_model = 'arn:aws:rekognition:us-east-1:333527701433:project/capstone_training/version/' \
+                'capstone_training.2020-07-01T13.02.04/1593622924884'
+
+    min_confidence = 95
+
+    analyzeVideo(video, new_model, min_confidence)
 
 
 if __name__ == "__main__":
