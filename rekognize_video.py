@@ -61,7 +61,7 @@ def analyzeVideo(video, model, min_confidence):
                         width = imgWidth * customLabel['Geometry']['BoundingBox']['Width']
                         height = imgHeight * customLabel['Geometry']['BoundingBox']['Height']
                         x = left + (width/2)
-                        y = top - (height/2)
+                        y = top + (height/2)
                         coords = (int(x), int(y))
 
                         # update the points queue
@@ -75,22 +75,25 @@ def analyzeVideo(video, model, min_confidence):
                         cv2.line(frame, (int(left) + int(width), int(top)),
                                  (int(left) + int(width), int(top) + int(height)), color=(0, 0, 0), thickness=3)
                         cv2.line(frame, (int(left) + int(width), int(top) + int(height)),
-                                 (int(left), int(top) + int(width)), color=(0, 0, 0), thickness=3)
-                        cv2.line(frame, (int(left), int(top) + int(width)), (int(left), int(top)), color=(0, 0, 0), thickness=3)
+                                 (int(left), int(top) + int(height)), color=(0, 0, 0), thickness=3)
+                        cv2.line(frame, (int(left), int(top) + int(height)), (int(left), int(top)), color=(0, 0, 0), thickness=3)
 
-        # loop over the set of tracked points
-        for i in range(1, len(pts)):
-            # if either of the tracked points are None, ignore them
-            if pts[i - 1] is None or pts[i] is None:
-                continue
-            # otherwise draw the connecting lines
-            cv2.line(frame, pts[i - 1], pts[i], (44, 255, 20), thickness)
-            # compute and draw launch angle
-            (x1, y1) = pts[-1]
-            (x2, y2) = pts[-2]
-            angle = int(math.atan((y1 - y2) / (x1 - x2)) * 180 / math.pi)
-            cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
-                        fontface, fontscale, color=fontcolor, thickness=thickness)
+        # loop over the set of tracked points if ball if above basket threshold
+        # (hardcoded this--NEED TO REVISIT LATER)
+        # "y" represents the position of the ball
+        # if y > 250 it means it is below the basket and we want to stop tracing it
+            for i in range(1, len(pts)):
+                # if either of the tracked points are None, ignore them
+                if pts[i - 1] is None or pts[i] is None:
+                    continue
+                # otherwise draw the connecting lines
+                cv2.line(frame, pts[i - 1], pts[i], (44, 255, 20), thickness)
+                # compute and draw launch angle
+                (x1, y1) = pts[-1]
+                (x2, y2) = pts[-2]
+                angle = int(math.atan((y1 - y2) / (x1 - x2)) * 180 / math.pi)
+                cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
+                            fontface, fontscale, color=fontcolor, thickness=thickness)
 
         # write the video to a file and show the video
         out.write(frame)

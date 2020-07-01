@@ -42,39 +42,43 @@ def show_custom_labels(model, photo, min_confidence):
     # calculate and display bounding boxes for each detected custom label
     print('Detected custom labels for ' + photo)
     for customLabel in response['CustomLabels']:
-        print('Label ' + str(customLabel['Name']))
-        print('Confidence ' + str(customLabel['Confidence']))
-        if 'Geometry' in customLabel:
-            box = customLabel['Geometry']['BoundingBox']
-            left = imgWidth * box['Left']
-            top = imgHeight * box['Top']
-            width = imgWidth * box['Width']
-            height = imgHeight * box['Height']
-            x = left + (width / 2)
-            y = top - (height / 2)
+        if customLabel['Name'] == 'basket':
+            print('Label ' + str(customLabel['Name']))
+            print('Confidence ' + str(customLabel['Confidence']))
+            if 'Geometry' in customLabel:
+                box = customLabel['Geometry']['BoundingBox']
+                left = imgWidth * box['Left']
+                top = imgHeight * box['Top']
+                width = imgWidth * box['Width']
+                height = imgHeight * box['Height']
+                x = left + (width / 2)
+                y = top + (height / 2)
 
-            # fnt = ImageFont.truetype('/Library/Fonts/Arial.ttf', 50)
-            # draw.text((left, top), customLabel['Name'], fill='#00d400', font=fnt)
+                x_center = ((left + width)/2)
+                y_center = ((top + height)/2)
 
-            print('Left: ' + '{0:.0f}'.format(left))
-            print('Top: ' + '{0:.0f}'.format(top))
-            print('Label Width: ' + "{0:.0f}".format(width))
-            print('Label Height: ' + "{0:.0f}".format(height))
-            print('X: {}, Y: {}'.format(x, y))
+                # fnt = ImageFont.truetype('/Library/Fonts/Arial.ttf', 50)
+                # draw.text((left, top), customLabel['Name'], fill='#00d400', font=fnt)
 
-            points = (
-                (left, top),
-                (left + width, top),
-                (left + width, top + height),
-                (left, top))
+                print('Left: ' + '{0:.0f}'.format(left))
+                print('Top: ' + '{0:.0f}'.format(top))
+                print('Label Width: ' + "{0:.0f}".format(width))
+                print('Label Height: ' + "{0:.0f}".format(height))
+                print('X: {}, Y: {}, X_center: {}, Y_center: {}'.format(x, y, x_center, y_center))
 
-            cv2.line(frame, (int(left), int(top)), (int(left) + int(width), int(top)), color=(0, 0, 0))
-            cv2.line(frame, (int(left) + int(width), int(top)), (int(left) + int(width), int(top) + int(height)), color=(0, 0, 0))
-            cv2.line(frame, (int(left) + int(width), int(top) + int(height)), (int(left), int(top) + int(width)), color=(0, 0, 0))
-            cv2.line(frame, (int(left), int(top) + int(width)), (int(left), int(top)), color=(0, 0, 0))
+                points = (
+                    (left, top),
+                    (left + width, top),
+                    (left + width, top + height),
+                    (left, top))
 
-            # draw.line(points, fill='#00d400', width=5)
-            print(points)
+                cv2.line(frame, (int(left), int(top)), (int(left) + int(width), int(top)), color=(0, 0, 0))
+                cv2.line(frame, (int(left) + int(width), int(top)), (int(left) + int(width), int(top) + int(height)), color=(0, 0, 0))
+                cv2.line(frame, (int(left) + int(width), int(top) + int(height)), (int(left), int(top) + int(height)), color=(0, 0, 0))
+                cv2.line(frame, (int(left), int(top) + int(height)), (int(left), int(top)), color=(0, 0, 0))
+
+                # draw.line(points, fil0l='#00d400', width=5)
+                print(points)
 
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
@@ -84,7 +88,7 @@ def show_custom_labels(model, photo, min_confidence):
 
 def main():
     bucket = "custom-labels-console-us-east-1-a4ae15429b"
-    photo = "Demo Media/Frames/frameA30.jpg"
+    photo = "Demo Media/Frames/frameA0.jpg"
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
     min_confidence = 99
