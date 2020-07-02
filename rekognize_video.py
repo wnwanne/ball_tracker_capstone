@@ -20,6 +20,8 @@ def analyzeVideo(video, model, min_confidence):
     thickness = 3
     now = datetime.now()
     filename = 'Demo Media//Outputs//ouputvid-{}.avi'.format(now)
+    made_shots = 0
+    shots_taken = 0
 
     # Define the codec and create VideoWriter object.The output is stored in 'outputs-"date and time".mp4' file.
     # Define the fps to be equal to 10. Also frame size is passed.
@@ -56,6 +58,31 @@ def analyzeVideo(video, model, min_confidence):
 
             # calculate bounding boxes for each detected custom label
             for customLabel in response['CustomLabels']:
+                # only looking for basket
+                if customLabel['Name'] == 'basket':
+                    left_basket = imgWidth * customLabel['Geometry']['BoundingBox']['Left']
+                    top_basket = imgHeight * customLabel['Geometry']['BoundingBox']['Top']
+                    width_basket = imgWidth * customLabel['Geometry']['BoundingBox']['Width']
+                    height_basket = imgHeight * customLabel['Geometry']['BoundingBox']['Height']
+                    x_basket = left_basket + (width_basket / 2)
+                    y_basket = top_basket + (height_basket / 2)
+                    print('Label {}'.format(customLabel['Name']))
+                    print('x coor: {}, y coor: {}'.format(x_basket, y_basket))
+
+                    # draw bounding boxes around basket
+                    cv2.line(frame, (int(left_basket), int(top_basket)), (int(left_basket) + int(width_basket),
+                                                                          int(top_basket)), color=(0, 0, 0),thickness=3)
+
+                    cv2.line(frame, (int(left_basket) + int(width_basket), int(top_basket)),
+                             (int(left_basket) + int(width_basket), int(top_basket) + int(height_basket)),
+                             color=(0, 0, 0), thickness=3)
+
+                    cv2.line(frame, (int(left_basket) + int(width_basket), int(top_basket) + int(height_basket)),
+                             (int(left_basket), int(top_basket) + int(height_basket)), color=(0, 0, 0), thickness=3)
+
+                    cv2.line(frame, (int(left_basket), int(top_basket) + int(height_basket)),
+                             (int(left_basket), int(top_basket)), color=(0, 0, 0),thickness=3)
+
                 # only looking for the ball
                 if customLabel['Name'] == 'ball':
                     if 'Geometry' in customLabel:
@@ -63,15 +90,15 @@ def analyzeVideo(video, model, min_confidence):
                         top = imgHeight * customLabel['Geometry']['BoundingBox']['Top']
                         width = imgWidth * customLabel['Geometry']['BoundingBox']['Width']
                         height = imgHeight * customLabel['Geometry']['BoundingBox']['Height']
-                        x = left + (width/2)
-                        y = top + (height/2)
-                        coords = (int(x), int(y))
+                        x_ball = left + (width/2)
+                        y_ball = top + (height/2)
+                        coords = (int(x_ball), int(y_ball))
 
                         # update the points queue
                         pts.appendleft(coords)
 
                         print('Label {}'.format(customLabel['Name']))
-                        print('x coor: {}, y coor: {}'.format(x, y))
+                        print('x coor: {}, y coor: {}'.format(x_ball, y_ball))
 
                         # draw bounding boxes around image
                         cv2.line(frame, (int(left), int(top)), (int(left) + int(width), int(top)), color=(0, 0, 0), thickness=3)
@@ -80,6 +107,8 @@ def analyzeVideo(video, model, min_confidence):
                         cv2.line(frame, (int(left) + int(width), int(top) + int(height)),
                                  (int(left), int(top) + int(height)), color=(0, 0, 0), thickness=3)
                         cv2.line(frame, (int(left), int(top) + int(height)), (int(left), int(top)), color=(0, 0, 0), thickness=3)
+
+
 
         # loop over the set of tracked points if ball if above basket threshold
         # (hardcoded this--NEED TO REVISIT LATER)
@@ -102,6 +131,12 @@ def analyzeVideo(video, model, min_confidence):
                     cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
                                 fontface, fontscale, color=fontcolor, thickness=thickness)
 
+        # shots_taken += 1
+        # if
+
+
+
+
         # write the video to a file and show the video
         out.write(frame)
         cv2.imshow('frame', frame)
@@ -122,9 +157,9 @@ def main():
     new_model = 'arn:aws:rekognition:us-east-1:333527701433:project/capstone_training/version/' \
                 'capstone_training.2020-07-01T13.02.04/1593622924884'
 
-    min_confidence = 95
+    min_confidence = 99
 
-    analyzeVideo(video, new_model, min_confidence)
+    analyzeVideo(video, model, min_confidence)
 
 
 if __name__ == "__main__":
