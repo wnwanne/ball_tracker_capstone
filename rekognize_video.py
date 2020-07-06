@@ -7,6 +7,7 @@ from datetime import datetime
 
 def analyzeVideo(video, model, min_confidence):
 
+    global left, top, height, width
     rekognition = boto3.client('rekognition')
     vid = cv2.VideoCapture(video)
     fps = vid.get(cv2.CAP_PROP_FPS)  # frame rate
@@ -58,6 +59,12 @@ def analyzeVideo(video, model, min_confidence):
 
             # calculate bounding boxes for each detected custom label
             for customLabel in response['CustomLabels']:
+
+                # shooters window
+                shooters_top_left = (0, 400)
+                shooters_bot_right = (1900, 500)
+                cv2.rectangle(frame, shooters_top_left, shooters_bot_right, color=(255, 0, 0), thickness=2)
+
                 # only looking for basket
                 if customLabel['Name'] == 'basket':
                     left_basket = imgWidth * customLabel['Geometry']['BoundingBox']['Left']
@@ -70,19 +77,10 @@ def analyzeVideo(video, model, min_confidence):
                     print('x coor: {}, y coor: {}'.format(x_basket, y_basket))
 
                     # draw bounding boxes around basket
-                    cv2.line(frame, (int(left_basket), int(top_basket)), (int(left_basket) + int(width_basket),
-                                                                          int(top_basket)), color=(0, 0, 0),thickness=3)
-
-                    cv2.line(frame, (int(left_basket) + int(width_basket), int(top_basket)),
-                             (int(left_basket) + int(width_basket), int(top_basket) + int(height_basket)),
-                             color=(0, 0, 0), thickness=3)
-
-                    cv2.line(frame, (int(left_basket) + int(width_basket), int(top_basket) + int(height_basket)),
-                             (int(left_basket), int(top_basket) + int(height_basket)), color=(0, 0, 0), thickness=3)
-
-                    cv2.line(frame, (int(left_basket), int(top_basket) + int(height_basket)),
-                             (int(left_basket), int(top_basket)), color=(0, 0, 0),thickness=3)
-
+                    basket_top_left = (int(left_basket), int(top_basket))
+                    basket_bot_right = (int(left_basket) + int(width_basket), int(top_basket) + int(height_basket))
+                    cv2.rectangle(frame, basket_top_left, basket_bot_right,
+                                  color=(0, 0, 0), thickness=3)
                 # only looking for the ball
                 if customLabel['Name'] == 'ball':
                     if 'Geometry' in customLabel:
@@ -101,12 +99,11 @@ def analyzeVideo(video, model, min_confidence):
                         print('x coor: {}, y coor: {}'.format(x_ball, y_ball))
 
                         # draw bounding boxes around image
-                        cv2.line(frame, (int(left), int(top)), (int(left) + int(width), int(top)), color=(0, 0, 0), thickness=3)
-                        cv2.line(frame, (int(left) + int(width), int(top)),
-                                 (int(left) + int(width), int(top) + int(height)), color=(0, 0, 0), thickness=3)
-                        cv2.line(frame, (int(left) + int(width), int(top) + int(height)),
-                                 (int(left), int(top) + int(height)), color=(0, 0, 0), thickness=3)
-                        cv2.line(frame, (int(left), int(top) + int(height)), (int(left), int(top)), color=(0, 0, 0), thickness=3)
+                        im_top_left = (int(left), int(top))
+                        im_bot_right = (int(left) + int(width), int(top) + int(height))
+                        cv2.rectangle(frame, im_top_left, im_bot_right,
+                                      color=(0, 0, 0), thickness=3)
+
 
 
 
@@ -116,8 +113,10 @@ def analyzeVideo(video, model, min_confidence):
         # pts[i][0] is "x" and it represents the position of the ball
         # if y > 250 it means it is below the basket and we want to stop tracing it
         # if x < 1200 it means its too far away from the basket
+            a,b,c,d = int(top),int(left), int(width), int(height)
             for i in range(1, len(pts)):
-                if pts[i][1] < 250 or pts[i][0] > 1200:
+                if a < pts[i][0] < a+c and b < pts[i][1] < b + d:
+                # if pts[i][0] and pts[i][1] in 250:
     #     for i in range(1, len(pts)):
             # if either of the tracked points are None, ignore them
                     if pts[i - 1] is None or pts[i] is None:
@@ -150,7 +149,7 @@ def analyzeVideo(video, model, min_confidence):
 
 
 def main():
-    video = "Demo Media/winnie_shooting2.mp4"
+    video = "/Users/nwannw/Documents/AWS/Capstone/winnie_shooting_miss.mp4"
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
 

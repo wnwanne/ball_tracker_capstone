@@ -70,13 +70,14 @@ def show_custom_labels(model, photo, min_confidence):
                     (left + width, top + height),
                     (left, top))
 
-                cv2.line(frame, (int(left), int(top)), (int(left) + int(width), int(top)), color=(0, 0, 0))
-                cv2.line(frame, (int(left) + int(width), int(top)), (int(left) + int(width), int(top) + int(height)), color=(0, 0, 0))
-                cv2.line(frame, (int(left) + int(width), int(top) + int(height)), (int(left), int(top) + int(height)), color=(0, 0, 0))
-                cv2.line(frame, (int(left), int(top) + int(height)), (int(left), int(top)), color=(0, 0, 0))
+                cv2.rectangle(frame,(int(left),int(top)), (int(left) + int(width), int(top) + int(height)), color=(0,0,0))
 
                 # draw.line(points, fil0l='#00d400', width=5)
                 print(points)
+
+                #shooters window
+                cv2.rectangle(frame, (1400,400), (1500,500), color=(255,0,0), thickness=2)
+
 
     cv2.imshow('frame', frame)
     cv2.waitKey(0)
@@ -86,7 +87,7 @@ def show_custom_labels(model, photo, min_confidence):
 
 def main():
     bucket = "custom-labels-console-us-east-1-a4ae15429b"
-    photo = "Demo Media/Frames/frameA6.jpg"
+    photo = "/Users/nwannw/Documents/AWS/Capstone/frame0.jpg"
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
     min_confidence = 99
