@@ -4,7 +4,7 @@ import math
 import cv2
 from datetime import datetime
 
-
+# hi it chris
 def analyzeVideo(video, model, min_confidence):
 
     global left, top, height, width, x_basket, y_basket, basket_box
