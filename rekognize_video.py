@@ -140,15 +140,13 @@ def main():
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
 
-    new_model = 'arn:aws:rekognition:us-east-1:333527701433:project/capstone_training/version/' \
-                'capstone_training.2020-07-01T13.02.04/1593622924884'
+    new_model = 'arn:aws:rekognition:us-east-1:333527701433:project/capstone_try3/version/' \
+                'capstone_try3.2020-07-08T11.36.51/1594222611541'
 
-    newest_model = 'arn:aws:rekognition:us-east-1:333527701433:project/capstone_try2/version/' \
-                   'capstone_try2.2020-07-06T16.44.31/1594068271491'
 
-    min_confidence = 95
+    min_confidence = 99
 
-    analyzeVideo(video, model, min_confidence)
+    analyzeVideo(video, new_model, min_confidence)
 
 
 if __name__ == "__main__":
