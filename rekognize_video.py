@@ -4,7 +4,7 @@ import math
 import cv2
 from datetime import datetime
 
-# hi it chris
+
 def analyzeVideo(video, model, min_confidence):
 
     global left, top, height, width, x_basket, y_basket, basket_box
@@ -23,6 +23,13 @@ def analyzeVideo(video, model, min_confidence):
     filename = 'Demo Media//Outputs//ouputvid-{}.avi'.format(now)
     made_shots = 0
     shots_taken = 0
+
+    # ideal arc tracing variables -chris
+    all_basket_x_position = []
+    all_basket_y_position = []
+    all_ball_x_position = []
+    all_ball_y_position = []
+    ideal_angle = 51.5  # should be whatever input from the frontend is
 
     # Define the codec and create VideoWriter object.The output is stored in 'outputs-"date and time".mp4' file.
     # Define the fps to be equal to 10. Also frame size is passed.
@@ -70,6 +77,10 @@ def analyzeVideo(video, model, min_confidence):
                     print('Label {}'.format(customLabel['Name']))
                     print('x coor: {}, y coor: {}'.format(x_basket, y_basket))
 
+                    # add basket position to array on top, so i can get coordinates from first frame of basket - chris
+                    all_basket_x_position.append(x_basket)
+                    all_basket_y_position.append(y_basket)
+
                     # draw bounding boxes around basket
                     basket_top_left = (int(left_basket), int(top_basket))
                     basket_bot_right = (int(left_basket) + int(width_basket), int(top_basket) + int(height_basket))
@@ -91,6 +102,10 @@ def analyzeVideo(video, model, min_confidence):
 
                         print('Label {}'.format(customLabel['Name']))
                         print('x coor: {}, y coor: {}'.format(x_ball, y_ball))
+
+                        # add ball position to array on top, so i can get coordinates from first frame of ball - chris
+                        all_ball_x_position.append(int(x_ball))
+                        all_ball_y_position.append(int(y_ball))
 
                         # draw bounding boxes around image
                         im_top_left = (int(left), int(top))
@@ -121,6 +136,43 @@ def analyzeVideo(video, model, min_confidence):
                     cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
                                 fontface, fontscale, color=fontcolor, thickness=thickness)
 
+        # ideal arc tracing portion - chris
+        if len(all_ball_x_position) == 0:  # only start if there is a ball x position detected
+            continue
+
+        basket_x_position = all_basket_x_position[0]  # initial basket x position
+        basket_y_position = all_basket_y_position[0]  # initial basket y position
+        ball_initial_x_position = all_ball_x_position[0]  # initial ball x position
+        ball_initial_y_position = all_ball_y_position[0]  # initial ball y position
+        total_x_distance = (ball_initial_x_position - basket_x_position)  # TO DO: only works for current vid orientation
+        total_y_distance = (ball_initial_y_position - basket_y_position)  # TO DO: only works for current vid orientation
+        ratio = total_x_distance / 15  # ratio of pixels to feet
+        gravity = -32.2 * ratio  # gravity in ft/s^2 is 32.2, this variable gets gravity in px/s^2
+        first_half = total_y_distance - ((math.sin(math.radians(ideal_angle)) * total_x_distance) / math.cos(math.radians(ideal_angle)))  # first part of kinematic equation
+        second_half = (gravity / 2) * (total_x_distance ** 2) / (math.cos(math.radians(ideal_angle)) ** 2)  # second part of kinematic equation
+        initial_v = math.sqrt(second_half / first_half)  # initial velocity in px/s
+        total_time = total_x_distance / (initial_v * math.cos(math.radians(ideal_angle)))  # total travel time of ball
+        tracker_count = 50  # 50 is just how many points i decided to draw on the arc to connect. more tracker points = smoother curve
+        time_increment = total_time / tracker_count
+
+        x_differential = [0]  # list of how much the position changes on the x coordinate as time goes on
+        y_differential = [0]  # list of how much the position changes on the y coordinate as time goes on
+
+        previous_time = 0
+        while len(x_differential) < 51:
+            initial_v_x = initial_v * math.cos(math.radians(ideal_angle))  # initial velocity of x component
+            initial_v_y = initial_v * math.sin(math.radians(ideal_angle))  # initial velocity of y component
+            previous_time = previous_time + time_increment
+            x_changer = initial_v_x * previous_time  # kinematic equation, initial pos 0 and acc is 0
+            y_changer = (initial_v_y * previous_time) + ((gravity / 2) * (previous_time ** 2))  # kinematic equation but acc is gravity
+            x_differential.append(x_changer)
+            y_differential.append(y_changer)
+
+        # iterate through the xdiff and ydiff array, use those values and subtract from initial position, then draw a line from prev point to current point
+        counter = 0
+        while counter < len(x_differential) - 1:
+            cv2.line(frame, (int(ball_initial_x_position - x_differential[counter]), int(ball_initial_y_position - y_differential[counter])), (int(ball_initial_x_position - x_differential[counter + 1]), int(ball_initial_y_position - y_differential[counter + 1])), color=(255, 255, 0), thickness=3)
+            counter = counter + 1
 
         # write the video to a file and show the video
         out.write(frame)
