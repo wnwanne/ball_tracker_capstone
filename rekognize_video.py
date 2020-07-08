@@ -7,7 +7,7 @@ from datetime import datetime
 
 def analyzeVideo(video, model, min_confidence):
 
-    global left, top, height, width
+    global left, top, height, width, x_basket, y_basket, basket_box
     rekognition = boto3.client('rekognition')
     vid = cv2.VideoCapture(video)
     fps = vid.get(cv2.CAP_PROP_FPS)  # frame rate
@@ -59,12 +59,6 @@ def analyzeVideo(video, model, min_confidence):
 
             # calculate bounding boxes for each detected custom label
             for customLabel in response['CustomLabels']:
-
-                # shooters window
-                shooters_top_left = (0, 400)
-                shooters_bot_right = (1900, 500)
-                cv2.rectangle(frame, shooters_top_left, shooters_bot_right, color=(255, 0, 0), thickness=2)
-
                 # only looking for basket
                 if customLabel['Name'] == 'basket':
                     left_basket = imgWidth * customLabel['Geometry']['BoundingBox']['Left']
@@ -79,8 +73,8 @@ def analyzeVideo(video, model, min_confidence):
                     # draw bounding boxes around basket
                     basket_top_left = (int(left_basket), int(top_basket))
                     basket_bot_right = (int(left_basket) + int(width_basket), int(top_basket) + int(height_basket))
-                    cv2.rectangle(frame, basket_top_left, basket_bot_right,
-                                  color=(0, 0, 0), thickness=3)
+                    basket_box = cv2.rectangle(frame, basket_top_left, basket_bot_right, color=(0, 0, 0), thickness=3)
+
                 # only looking for the ball
                 if customLabel['Name'] == 'ball':
                     if 'Geometry' in customLabel:
@@ -111,13 +105,10 @@ def analyzeVideo(video, model, min_confidence):
         # (hardcoded this--NEED TO REVISIT LATER)
         # pts[i][1] is "y" and it represents the position of the ball
         # pts[i][0] is "x" and it represents the position of the ball
-        # if y > 250 it means it is below the basket and we want to stop tracing it
-        # if x < 1200 it means its too far away from the basket
-            a,b,c,d = int(top),int(left), int(width), int(height)
+        # if y < pts[-1][1] means it is above the first detection of the ball when being shot we want to trace it
+        # or if x = to the basket's xcoord and above the baskets ycoord keep tracing
             for i in range(1, len(pts)):
-                if a < pts[i][0] < a+c and b < pts[i][1] < b + d:
-                # if pts[i][0] and pts[i][1] in 250:
-    #     for i in range(1, len(pts)):
+                if pts[i][1] < pts[-1][1] or (pts[i][0] == x_basket and pts[i][1] < y_basket):
             # if either of the tracked points are None, ignore them
                     if pts[i - 1] is None or pts[i] is None:
                         continue
@@ -129,11 +120,6 @@ def analyzeVideo(video, model, min_confidence):
                     angle = int(math.atan((y1 - y2) / (x1 - x2)) * 180 / math.pi)
                     cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
                                 fontface, fontscale, color=fontcolor, thickness=thickness)
-
-        # shots_taken += 1
-        # if
-
-
 
 
         # write the video to a file and show the video
@@ -149,14 +135,18 @@ def analyzeVideo(video, model, min_confidence):
 
 
 def main():
-    video = "/Users/nwannw/Documents/AWS/Capstone/winnie_shooting_miss.mp4"
+    # video = "/Users/nwannw/Documents/AWS/Capstone/winnie_shooting.mp4"
+    video = 'Demo Media/winnie_shooting2.mp4'
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
 
     new_model = 'arn:aws:rekognition:us-east-1:333527701433:project/capstone_training/version/' \
                 'capstone_training.2020-07-01T13.02.04/1593622924884'
 
-    min_confidence = 99
+    newest_model = 'arn:aws:rekognition:us-east-1:333527701433:project/capstone_try2/version/' \
+                   'capstone_try2.2020-07-06T16.44.31/1594068271491'
+
+    min_confidence = 95
 
     analyzeVideo(video, model, min_confidence)
 
