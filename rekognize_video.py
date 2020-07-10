@@ -7,7 +7,7 @@ from datetime import datetime
 
 def analyzeVideo(video, model, min_confidence):
 
-    global left, top, height, width, x_basket, y_basket, basket_box
+    global left, top, height, width, x_basket, y_basket, basket_box, left_basket, x_ball, width_basket, top_basket, y_ball, height_basket
     rekognition = boto3.client('rekognition')
     vid = cv2.VideoCapture(video)
     fps = vid.get(cv2.CAP_PROP_FPS)  # frame rate
@@ -84,7 +84,7 @@ def analyzeVideo(video, model, min_confidence):
                     # draw bounding boxes around basket
                     basket_top_left = (int(left_basket), int(top_basket))
                     basket_bot_right = (int(left_basket) + int(width_basket), int(top_basket) + int(height_basket))
-                    basket_box = cv2.rectangle(frame, basket_top_left, basket_bot_right, color=(0, 0, 0), thickness=3)
+                    # basket_box = cv2.rectangle(frame, basket_top_left, basket_bot_right, color=(0, 0, 0), thickness=3)
 
                 # only looking for the ball
                 if customLabel['Name'] == 'ball':
@@ -110,8 +110,8 @@ def analyzeVideo(video, model, min_confidence):
                         # draw bounding boxes around image
                         im_top_left = (int(left), int(top))
                         im_bot_right = (int(left) + int(width), int(top) + int(height))
-                        cv2.rectangle(frame, im_top_left, im_bot_right,
-                                      color=(0, 0, 0), thickness=3)
+                        # cv2.rectangle(frame, im_top_left, im_bot_right,
+                        #               color=(0, 0, 0), thickness=3)
 
 
 
@@ -123,7 +123,7 @@ def analyzeVideo(video, model, min_confidence):
         # if y < pts[-1][1] means it is above the first detection of the ball when being shot we want to trace it
         # or if x = to the basket's xcoord and above the baskets ycoord keep tracing
             for i in range(1, len(pts)):
-                if pts[i][1] < pts[-1][1] or (pts[i][0] == x_basket and pts[i][1] < y_basket):
+                if pts[i][0] > x_basket:
             # if either of the tracked points are None, ignore them
                     if pts[i - 1] is None or pts[i] is None:
                         continue
@@ -135,6 +135,7 @@ def analyzeVideo(video, model, min_confidence):
                     angle = int(math.atan((y1 - y2) / (x1 - x2)) * 180 / math.pi)
                     cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
                                 fontface, fontscale, color=fontcolor, thickness=thickness)
+
 
         # ideal arc tracing portion - chris
         if len(all_ball_x_position) == 0:  # only start if there is a ball x position detected
@@ -174,6 +175,15 @@ def analyzeVideo(video, model, min_confidence):
             cv2.line(frame, (int(ball_initial_x_position - x_differential[counter]), int(ball_initial_y_position - y_differential[counter])), (int(ball_initial_x_position - x_differential[counter + 1]), int(ball_initial_y_position - y_differential[counter + 1])), color=(255, 255, 0), thickness=3)
             counter = counter + 1
 
+        # Shot counter portion
+        # x_shot, y_shot = pts[0][0], pts[0][1]
+        # if ((left_basket + width_basket) > x_shot > left_basket) and (top_basket < y_shot < (top_basket + height_basket)):
+        #     made_shots += 1
+        #     shots_taken += 1
+        #     cv2.putText(frame, "Shot Made:{}   Shot Taken:{}".format(made_shots, shots_taken), (100, 800),
+        #                 fontface, fontscale, color=fontcolor, thickness=thickness)
+
+
         # write the video to a file and show the video
         out.write(frame)
         cv2.imshow('frame', frame)
@@ -187,8 +197,8 @@ def analyzeVideo(video, model, min_confidence):
 
 
 def main():
-    # video = "/Users/nwannw/Documents/AWS/Capstone/winnie_shooting.mp4"
-    video = 'Demo Media/winnie_shooting2.mp4'
+    #video = "/Users/nwannw/Documents/AWS/Capstone/winnie_shootingtest.mp4"
+    video = 'Demo Media/winnie_shooting.mp4'
     model = 'arn:aws:rekognition:us-east-1:333527701433:project/winnie_test_training/version/' \
             'winnie_test_training.2020-04-30T22.35.42/1588300542347'
 
@@ -196,7 +206,7 @@ def main():
                 'capstone_try3.2020-07-08T11.36.51/1594222611541'
 
 
-    min_confidence = 99
+    min_confidence = 95
 
     analyzeVideo(video, new_model, min_confidence)
 
