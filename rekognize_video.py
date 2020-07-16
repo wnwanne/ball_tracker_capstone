@@ -29,6 +29,7 @@ def analyzeVideo(video, model, min_confidence):
     all_basket_y_position = []
     all_ball_x_position = []
     all_ball_y_position = []
+    calc_angle = 0
     ideal_angle = 51.5  # should be whatever input from the frontend is
 
     # Define the codec and create VideoWriter object.The output is stored in 'outputs-"date and time".mp4' file.
@@ -133,6 +134,7 @@ def analyzeVideo(video, model, min_confidence):
                     (x1, y1) = pts[-1]
                     (x2, y2) = pts[-2]
                     angle = int(math.atan((y1 - y2) / (x1 - x2)) * 180 / math.pi)
+                    calc_angle = angle
                     cv2.putText(frame, str(angle), (int(x1-60), int(y1)),
                                 fontface, fontscale, color=fontcolor, thickness=thickness)
 
@@ -149,18 +151,46 @@ def analyzeVideo(video, model, min_confidence):
         total_y_distance = (ball_initial_y_position - basket_y_position)  # TO DO: only works for current vid orientation
         ratio = total_x_distance / 15  # ratio of pixels to feet
         gravity = -32.2 * ratio  # gravity in ft/s^2 is 32.2, this variable gets gravity in px/s^2
+        print(gravity/2)
         first_half = total_y_distance - ((math.sin(math.radians(ideal_angle)) * total_x_distance) / math.cos(math.radians(ideal_angle)))  # first part of kinematic equation
         second_half = (gravity / 2) * (total_x_distance ** 2) / (math.cos(math.radians(ideal_angle)) ** 2)  # second part of kinematic equation
         initial_v = math.sqrt(second_half / first_half)  # initial velocity in px/s
         total_time = total_x_distance / (initial_v * math.cos(math.radians(ideal_angle)))  # total travel time of ball
+        ideal_initial_velocity = (initial_v / ratio) / 3.281  # ideal initial velocity in m/s^2
         tracker_count = 50  # 50 is just how many points i decided to draw on the arc to connect. more tracker points = smoother curve
         time_increment = total_time / tracker_count
+
+        ### To get actual velocity of ball being tracked ###
+        if calc_angle == 0:
+            continue
+
+        actual_first_half = total_y_distance - ((math.sin(math.radians(calc_angle)) * total_x_distance) / math.cos(math.radians(calc_angle)))  # first part of kinematic equation
+        actual_second_half = (gravity / 2) * (total_x_distance ** 2) / (math.cos(math.radians(calc_angle)) ** 2)  # second part of kinematic equation
+        actual_initial_v = math.sqrt(actual_second_half / actual_first_half)
+        actual_initial_velocity = (actual_initial_v / ratio) / 3.281  # actual initial velocity in m/s^2
+
+        # test_ball_first_x = all_ball_x_position[3]
+        # test_ball_first_y = all_ball_y_position[3]
+        # test_total_x_distance = (ball_initial_x_position - test_ball_first_x)
+        # test_total_y_distance = (ball_initial_y_position - test_ball_first_y)
+        # test_actual_first_half = test_total_y_distance - ((math.sin(math.radians(calc_angle)) * test_total_x_distance) / math.cos(math.radians(calc_angle)))  # first part of kinematic equation
+        # test_actual_second_half = (gravity / 2) * (test_total_x_distance ** 2) / (math.cos(math.radians(calc_angle)) ** 2)  # second part of kinematic equation
+        # test_actual_initial_v = test_actual_second_half / test_actual_first_half
+        # print(test_actual_first_half)
+        # test_actual_initial_velocity = (test_actual_initial_v / ratio) / 3.281  # actual initial velocity in m/s^2
+
+
+
+
+
+
+        ### end get actual velocity portion ###
 
         x_differential = [0]  # list of how much the position changes on the x coordinate as time goes on
         y_differential = [0]  # list of how much the position changes on the y coordinate as time goes on
 
         previous_time = 0
-        while len(x_differential) < 51:
+        while len(x_differential) < (tracker_count - 1):
             initial_v_x = initial_v * math.cos(math.radians(ideal_angle))  # initial velocity of x component
             initial_v_y = initial_v * math.sin(math.radians(ideal_angle))  # initial velocity of y component
             previous_time = previous_time + time_increment
@@ -190,6 +220,9 @@ def analyzeVideo(video, model, min_confidence):
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+    print(ideal_initial_velocity)
+    print(actual_initial_velocity)
 
     cv2.destroyAllWindows()
     vid.release()
